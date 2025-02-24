@@ -1,0 +1,68 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./logs:/log
+    environment:
+      - DB_HOST=db
+      - DB_PORT=5432
+      - DB_NAME=mesh_group
+      - DB_USER=postgres
+      - DB_PASSWORD=postgres
+      - CONN_URI=http://erp:8080/ords/bsm/segmentation/get_segmentation
+      - CONN_AUTH_LOGIN_PWD=4Dfddf5:jKlljHGH
+      - CONN_USER_AGENT=spacecount-test
+      - CONN_TIMEOUT=5
+      - CONN_INTERVAL=1500
+      - IMPORT_BATCH_SIZE=50
+      - LOG_CLEANUP_MAX_AGE=7
+      - LOG_LEVEL=debug
+    depends_on:
+      db:
+        condition: service_healthy
+      erp:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  erp:
+    build:
+      context: ./cmd/erp
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "8080"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-network
+
+  db:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=mesh_group
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./setup/install.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-network
+
+volumes:
+  db-data:
+
+networks:
+  app-network:
+    driver: bridge
