@@ -146,8 +146,6 @@ func (s *Segmentation) doRequest(req *http.Request) ([]*Row, error) {
 		return nil, nil
 	}
 
-	s.logger.Info(string(body))
-
 	var rows []*Row
 	if err = json.Unmarshal(body, &rows); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal JSON response")
@@ -161,9 +159,6 @@ func (s *Segmentation) saveRows(rows []*Row) error {
 	if err != nil {
 		return err
 	}
-
-	data, _ := json.MarshalIndent(rows, "", "  ")
-	s.logger.Info(string(data))
 
 	query := `
         INSERT INTO segmentation (address_sap_id, adr_segment, segment_id)

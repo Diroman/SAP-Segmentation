@@ -28,7 +28,7 @@ func main() {
 	cleanupOldLogs(cfg)
 
 	// setup logger
-	logger := setupLogger()
+	logger := setupLogger(cfg.LogLevel)
 
 	segmentation, err := model.NewSegmentation(&cfg, logger)
 	if err != nil {
@@ -40,14 +40,14 @@ func main() {
 	}
 }
 
-func setupLogger() *logrus.Logger {
+func setupLogger(logLevel string) *logrus.Logger {
 	logger := logrus.New()
 
-	if err := os.MkdirAll("./log", 0755); err != nil {
+	if err := os.MkdirAll("/log", 0755); err != nil {
 		logrus.WithError(err).Fatal("failed to create log directory")
 	}
 
-	logFile, err := os.OpenFile("./log/segmentation_import.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	logFile, err := os.OpenFile("/log/segmentation_import.log", os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if err != nil {
 		logrus.WithError(err).Fatal("failed to open log file")
 	}
@@ -57,7 +57,6 @@ func setupLogger() *logrus.Logger {
 		FullTimestamp: true,
 	})
 
-	logLevel := "info"
 	level, err := logrus.ParseLevel(logLevel)
 	if err != nil {
 		logger.Warnf("invalid log level '%s', defaulting to info", logLevel)
